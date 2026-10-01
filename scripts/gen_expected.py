@@ -346,11 +346,147 @@ def gen_holiday():
     print("testdata/holiday_daily.json:", len(days), "天,", len(years), "个年份")
 
 
+def ref_add(flags, first, last, start, n):
+    """按设计文档 §5.4.1 的定义暴力计算 add_workdays;路径越出 [first, last] 返回 None。"""
+    if n == 0:
+        return start
+    step = 1 if n > 0 else -1
+    delta = dt.timedelta(days=step)
+    remaining, cur = n, start
+    while remaining != 0:
+        cur += delta
+        if cur < first or cur > last:
+            return None
+        if flags[cur.isoformat()]:
+            remaining -= step
+    return cur
+
+
+def ref_between(flags, a, b):
+    """[a, b) 内的工作日个数;a > b 时取相反数。a、b 必须在覆盖范围内。"""
+    if a > b:
+        return -ref_between(flags, b, a)
+    return sum(flags[(a + dt.timedelta(days=i)).isoformat()] for i in range((b - a).days))
+
+
+def gen_workday():
+    pkg = chinese_days_dir()
+    first, last, days, _kinds, _names, flags = chinese_days_daily()
+    rng = random.Random(SEED)
+    one = dt.timedelta(days=1)
+
+    def is_wd(d):
+        return flags[d.isoformat()] == 1
+
+    # 连续 3 天及以上的非工作日区块(春节、国庆、五一……含前后相连的周末)
+    runs, i = [], 0
+    while i < len(days):
+        if not is_wd(days[i]):
+            j = i
+            while j + 1 < len(days) and not is_wd(days[j + 1]):
+                j += 1
+            if j - i + 1 >= 3:
+                runs.append((days[i], days[j]))
+            i = j + 1
+        else:
+            i += 1
+
+    # ---- add_workdays 用例 ----
+    starts = []
+    for a, b in runs:
+        for s in (a - one, b + one, a, b):
+            if first <= s <= last:
+                starts.append(s)
+    cases = [(s, n) for s in starts for n in (-5, -1, 0, 1, 5)]
+    for _ in range(800):
+        cases.append((days[rng.randrange(len(days))], rng.randint(-40, 40)))
+    cases += [(first, 5000), (last, -5000), (dt.date(2010, 6, 1), 1500), (dt.date(2020, 1, 1), -800)]
+    # 去重(保持顺序),并只保留全程都在覆盖范围内的用例
+    cases = [c for c in dict.fromkeys(cases) if ref_add(flags, first, last, c[0], c[1]) is not None]
+
+    # 真实 chinese-days 的 findWorkday 能回答:n != 0,或 n == 0 且起算日是工作日
+    api_cases = [(s, n) for (s, n) in cases if n != 0 or is_wd(s)]
+    answers = node_query(pkg, {"add": [[s.isoformat(), n] for (s, n) in api_cases]})["add"]
+    api = dict(zip(api_cases, answers))
+    add = []
+    for s, n in cases:
+        want = ref_add(flags, first, last, s, n).isoformat()
+        if (s, n) in api:
+            assert api[(s, n)] == want, ("findWorkday 与定义不一致", s, n, api[(s, n)], want)
+            src = "cd"
+        else:
+            src = "ref"  # n == 0 且起算日不是工作日:chinese-days 会顺延,本设计原样返回(§5.4.4)
+        add.append({"from": s.isoformat(), "n": n, "to": want, "src": src})
+
+    # ---- workdays_between 用例 ----
+    pairs = []
+    for a, b in runs:
+        for x, y in [(a - one, b + one), (a - one, b), (a, b + one), (a, b)]:
+            if first <= x <= last and first <= y <= last:
+                pairs += [(x, y), (y, x)]
+    for _ in range(800):
+        pairs.append((days[rng.randrange(len(days))], days[rng.randrange(len(days))]))
+    pairs += [(first, last), (last, first), (first, first), (last, last)]
+    pairs = list(dict.fromkeys(pairs))
+    # chinese-days 的 getWorkdaysInRange(起, 止) 两端都含;[a, b) 对应 (a, b 的前一天)
+    forward = [(x, y) for (x, y) in pairs if x < y]
+    counts = node_query(
+        pkg, {"between": [[x.isoformat(), (y - one).isoformat()] for (x, y) in forward]}
+    )["between"]
+    api_between = dict(zip(forward, counts))
+    between = []
+    for x, y in pairs:
+        want = ref_between(flags, x, y)
+        if (x, y) in api_between:
+            assert api_between[(x, y)] == want, ("getWorkdaysInRange 与定义不一致", x, y)
+        between.append({"a": x.isoformat(), "b": y.isoformat(), "count": want})
+
+    # ---- 文档里的示例(设计文档 §5.4.3) ----
+    examples_add = []
+    for ds, n in [
+        ("2026-09-30", 1), ("2026-10-09", 1), ("2026-10-10", 1), ("2026-10-03", 0),
+        ("2026-10-03", 1), ("2026-10-03", -1), ("2026-10-08", -2),
+    ]:
+        want = ref_add(flags, first, last, dt.date.fromisoformat(ds), n)
+        assert want is not None, (ds, n)
+        examples_add.append({"from": ds, "n": n, "to": want.isoformat()})
+    examples_between = []
+    for da, db in [("2026-09-30", "2026-10-12"), ("2026-10-12", "2026-09-30")]:
+        a, b = dt.date.fromisoformat(da), dt.date.fromisoformat(db)
+        examples_between.append({"a": da, "b": db, "count": ref_between(flags, a, b)})
+
+    year_flags = []
+    for y in range(first.year, last.year + 1):
+        year_flags.append(
+            {"y": y, "f": "".join(str(flags[d.isoformat()]) for d in days if d.year == y)}
+        )
+
+    write_sectioned_json(
+        "testdata/workday_cases.json",
+        [
+            ("meta", cd_meta({"semantics": "docs/superpowers/specs/2026-10-01-cncal-design.md §5.4.1"})),
+            ("from", first.isoformat()),
+            ("through", last.isoformat()),
+            ("add", add),
+            ("between", between),
+            ("examples_add", examples_add),
+            ("examples_between", examples_between),
+            ("flags", year_flags),
+        ],
+    )
+    print(
+        "testdata/workday_cases.json:", len(add), "个 add_workdays 用例(其中",
+        sum(1 for a in add if a["src"] == "cd"), "个来自 chinese-days),",
+        len(between), "个 workdays_between 用例,", len(runs), "个连续非工作日区块",
+    )
+
+
 GENERATORS = {
     "date": gen_date,
     "lunar": gen_lunar,
     "terms": gen_terms,
     "holiday": gen_holiday,
+    "workday": gen_workday,
 }
 
 

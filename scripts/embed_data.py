@@ -20,6 +20,7 @@ EMBEDS = [
     ("testdata/solar_terms.json", "lunar/solar_terms_test.mbt", "solar_terms_json"),
     ("data/holidays.json", "holiday/data_gen.mbt", "holidays_json"),
     ("testdata/holiday_daily.json", "holiday/holiday_daily_test.mbt", "holiday_daily_json"),
+    ("testdata/workday_cases.json", "workday/workday_cases_test.mbt", "workday_cases_json"),
 ]
 
 

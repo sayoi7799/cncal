@@ -1,0 +1,21 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "sayoi7799/cncal/workday"
+
+import {
+  "sayoi7799/cncal/date",
+}
+
+// Values
+pub fn add_workdays(@date.Date, Int) -> @date.Date raise @date.CalendarError
+
+pub fn is_workday(@date.Date) -> Bool raise @date.CalendarError
+
+pub fn workdays_between(@date.Date, @date.Date) -> Int raise @date.CalendarError
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits

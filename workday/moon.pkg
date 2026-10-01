@@ -1,0 +1,10 @@
+warnings = "-implicit_impl_as_method"
+
+import {
+  "sayoi7799/cncal/date",
+  "sayoi7799/cncal/holiday",
+}
+
+import {
+  "sayoi7799/cncal/internal/jsonx",
+} for "test"
