@@ -1,12 +1,62 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "sayoi7799/cncal"
 
+import {
+  "sayoi7799/cncal/date",
+  "sayoi7799/cncal/holiday",
+  "sayoi7799/cncal/lunar",
+}
+
 // Values
+pub fn add_workdays(@date.Date, Int) -> @date.Date raise @date.CalendarError
+
+pub fn data_info() -> @holiday.DataInfo raise @date.CalendarError
+
+pub fn day_kind(@date.Date) -> @holiday.DayKind raise @date.CalendarError
+
+pub fn days_in_month(Int, Int) -> Int raise @date.CalendarError
+
+pub fn holiday_name(@date.Date) -> String? raise @date.CalendarError
+
+pub fn is_holiday(@date.Date) -> Bool raise @date.CalendarError
+
+pub fn is_leap_year(Int) -> Bool
+
+pub fn is_makeup_workday(@date.Date) -> Bool raise @date.CalendarError
+
+pub fn is_workday(@date.Date) -> Bool raise @date.CalendarError
+
+pub fn leap_month(Int) -> Int raise @date.CalendarError
+
+pub fn lunar_to_solar(@lunar.LunarDate) -> @date.Date raise @date.CalendarError
+
+pub fn month_days(Int, Int, Bool) -> Int raise @date.CalendarError
+
+pub fn solar_terms(Int) -> Array[@lunar.SolarTermDate] raise @date.CalendarError
+
+pub fn solar_to_lunar(@date.Date) -> @lunar.LunarDate raise @date.CalendarError
+
+pub fn workdays_between(@date.Date, @date.Date) -> Int raise @date.CalendarError
 
 // Errors
 
 // Types and methods
 
 // Type aliases
+pub using @date {type CalendarError}
+
+pub using @holiday {type DataInfo}
+
+pub using @date {type Date}
+
+pub using @holiday {type DayKind}
+
+pub using @lunar {type LunarDate}
+
+pub using @lunar {type SolarTerm}
+
+pub using @lunar {type SolarTermDate}
+
+pub using @date {type Weekday}
 
 // Traits
