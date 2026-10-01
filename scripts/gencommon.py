@@ -88,3 +88,20 @@ def chinese_days_dir():
     with tarfile.open(tgz) as tf:
         tf.extractall(base, filter="data")
     return pkg
+
+
+def node_query(pkg, request):
+    """把请求交给 scripts/cd_query.js,由真实的 chinese-days 包回答。"""
+    node = shutil.which("node")
+    if not node:
+        raise SystemExit("需要 Node.js")
+    script = os.path.join(ROOT, "scripts", "cd_query.js")
+    proc = subprocess.run(
+        [node, script, pkg],
+        input=json.dumps(request),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=True,
+    )
+    return json.loads(proc.stdout)

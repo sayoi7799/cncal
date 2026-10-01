@@ -16,11 +16,20 @@
 import calendar
 import datetime as dt
 import functools
+import json
+import os
 import random
 import sys
 from collections import namedtuple
 
-from gencommon import LUNAR_PYTHON_VERSION, require_lunar_python, write_sectioned_json
+from gencommon import (
+    LUNAR_PYTHON_VERSION,
+    CHINESE_DAYS_VERSION,
+    chinese_days_dir,
+    node_query,
+    require_lunar_python,
+    write_sectioned_json,
+)
 
 SEED = 20261001
 EPOCH = dt.date(1970, 1, 1).toordinal()
@@ -265,10 +274,83 @@ def gen_terms():
     print("testdata/solar_terms.json:", len(lines), "年 × 24 个节气")
 
 
+@functools.lru_cache(maxsize=None)
+def chinese_days_daily():
+    """chinese-days 覆盖范围内每一天的类型、节日名与 isWorkday。
+
+    类型与节日名取自包内的 dist/chinese-days.json,并与真实 API(isWorkday、getDayDetail)
+    逐日交叉核对,不一致就失败。返回 (起, 止, 日期列表, 类型, 节日名, 是否工作日)。
+    类型字符:W 普通工作日,E 普通周末,H 放假日,M 调休补班日。
+    """
+    pkg = chinese_days_dir()
+    with open(os.path.join(pkg, "dist", "chinese-days.json"), encoding="utf-8") as f:
+        raw = json.load(f)
+    zh = lambda v: v.split(",")[1]
+    hol = {k: zh(v) for k, v in raw["holidays"].items()}
+    wrk = {k: zh(v) for k, v in raw["workdays"].items()}
+    years = sorted({int(k[:4]) for k in list(hol) + list(wrk)})
+    first, last = dt.date(years[0], 1, 1), dt.date(years[-1], 12, 31)
+    days = [first + dt.timedelta(days=i) for i in range((last - first).days + 1)]
+    answers = node_query(pkg, {"daily": [d.isoformat() for d in days]})["daily"]
+    kinds, names, flags = {}, {}, {}
+    for d, (iso, is_workday, work, _name) in zip(days, answers):
+        assert iso == d.isoformat()
+        if iso in wrk:
+            kind, names[iso] = "M", wrk[iso]
+        elif iso in hol:
+            kind, names[iso] = "H", hol[iso]
+        else:
+            kind = "W" if d.weekday() < 5 else "E"
+        expected_work = kind in ("W", "M")
+        assert bool(is_workday) == expected_work and bool(work) == expected_work, (
+            iso, kind, is_workday, work,
+        )
+        kinds[iso] = kind
+        flags[iso] = 1 if expected_work else 0
+    return first, last, days, kinds, names, flags
+
+
+def cd_meta(extra=None):
+    meta = {
+        "generator": "scripts/gen_expected.py",
+        "reference": "chinese-days@%s(真实 npm 包,经 Node 调用 isWorkday / getDayDetail / findWorkday / getWorkdaysInRange)"
+        % CHINESE_DAYS_VERSION,
+        "seed": SEED,
+    }
+    if extra:
+        meta.update(extra)
+    return meta
+
+
+def gen_holiday():
+    first, last, days, kinds, names, _flags = chinese_days_daily()
+    years = []
+    for y in range(first.year, last.year + 1):
+        ds = [d.isoformat() for d in days if d.year == y]
+        years.append(
+            {
+                "y": y,
+                "k": "".join(kinds[iso] for iso in ds),
+                "n": {iso: names[iso] for iso in ds if iso in names},
+            }
+        )
+    write_sectioned_json(
+        "testdata/holiday_daily.json",
+        [
+            ("meta", cd_meta({"kinds": "W 工作日 / E 周末 / H 放假日 / M 调休补班日"})),
+            ("from", first.isoformat()),
+            ("through", last.isoformat()),
+            ("years", years),
+        ],
+    )
+    print("testdata/holiday_daily.json:", len(days), "天,", len(years), "个年份")
+
+
 GENERATORS = {
     "date": gen_date,
     "lunar": gen_lunar,
     "terms": gen_terms,
+    "holiday": gen_holiday,
 }
 
 

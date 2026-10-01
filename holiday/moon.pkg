@@ -1,0 +1,7 @@
+warnings = "-implicit_impl_as_method"
+
+import {
+  "sayoi7799/cncal/date",
+  "sayoi7799/cncal/internal/jsonx",
+  "moonbitlang/core/lazy",
+}

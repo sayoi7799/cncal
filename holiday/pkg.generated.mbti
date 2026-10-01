@@ -1,0 +1,39 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "sayoi7799/cncal/holiday"
+
+import {
+  "moonbitlang/core/debug",
+  "sayoi7799/cncal/date",
+}
+
+// Values
+pub fn data_info() -> DataInfo raise @date.CalendarError
+
+pub fn day_kind(@date.Date) -> DayKind raise @date.CalendarError
+
+pub fn holiday_name(@date.Date) -> String? raise @date.CalendarError
+
+pub fn is_holiday(@date.Date) -> Bool raise @date.CalendarError
+
+pub fn is_makeup_workday(@date.Date) -> Bool raise @date.CalendarError
+
+// Errors
+
+// Types and methods
+pub struct DataInfo {
+  schema_version : Int
+  data_version : String
+  from : @date.Date
+  through : @date.Date
+} derive(Eq, @debug.Debug)
+
+pub(all) enum DayKind {
+  Workday
+  Weekend
+  Holiday(String)
+  MakeupWorkday(String)
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
