@@ -1,0 +1,31 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "sayoi7799/cncal/internal/jsonx"
+
+import {
+  "sayoi7799/cncal/date",
+}
+
+// Values
+pub fn as_array(Json) -> Array[Json] raise @date.CalendarError
+
+pub fn as_bool(Json) -> Bool raise @date.CalendarError
+
+pub fn as_int(Json) -> Int raise @date.CalendarError
+
+pub fn as_object(Json) -> Map[String, Json] raise @date.CalendarError
+
+pub fn as_string(Json) -> String raise @date.CalendarError
+
+pub fn field(Json, String) -> Json raise @date.CalendarError
+
+pub fn is_null(Json) -> Bool
+
+pub fn parse(String) -> Json raise @date.CalendarError
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits

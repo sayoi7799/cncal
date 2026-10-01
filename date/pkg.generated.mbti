@@ -1,0 +1,51 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "sayoi7799/cncal/date"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn days_in_month(Int, Int) -> Int raise CalendarError
+
+pub fn is_leap_year(Int) -> Bool
+
+// Errors
+pub(all) suberror CalendarError {
+  InvalidDate(String)
+  OutOfRange(String)
+  DataNotCovered(Date, Date, Date)
+  DataCorrupt(String)
+} derive(Eq, @debug.Debug)
+pub impl Show for CalendarError
+
+// Types and methods
+pub struct Date {
+  year : Int
+  month : Int
+  day : Int
+} derive(Compare, Eq, @debug.Debug)
+pub fn Date::add_days(Self, Int) -> Self raise CalendarError
+pub fn Date::days_between(Self, Self) -> Int
+pub fn Date::from_days(Int) -> Self raise CalendarError
+pub fn Date::from_iso(String) -> Self raise CalendarError
+pub fn Date::new(Int, Int, Int) -> Self raise CalendarError
+pub fn Date::to_days(Self) -> Int
+pub fn Date::weekday(Self) -> Weekday
+pub impl Show for Date
+
+pub(all) enum Weekday {
+  Monday
+  Tuesday
+  Wednesday
+  Thursday
+  Friday
+  Saturday
+  Sunday
+} derive(Compare, Eq, @debug.Debug)
+pub fn Weekday::is_weekend(Self) -> Bool
+pub fn Weekday::iso_number(Self) -> Int
+
+// Type aliases
+
+// Traits

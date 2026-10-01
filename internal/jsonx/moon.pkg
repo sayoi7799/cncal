@@ -1,0 +1,8 @@
+import {
+  "sayoi7799/cncal/date",
+  "moonbitlang/core/json",
+}
+
+import {
+  "sayoi7799/cncal/date",
+} for "test"
