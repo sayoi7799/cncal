@@ -1,0 +1,8 @@
+_build/
+.mooncakes/
+.venv/
+__pycache__/
+*.pyc
+scripts/.cache/
+node_modules/
+*.tgz

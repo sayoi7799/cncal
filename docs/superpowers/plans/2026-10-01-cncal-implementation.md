@@ -59,7 +59,7 @@ scripts/           requirements.txt  gencommon.py  gen_tables.py  gen_expected.p
 
 ---
 
-### 任务 1:项目骨架
+### Task 1:项目骨架
 
 **文件:**
 - 创建:`moon.mod`、`moon.pkg`、`LICENSE`、`.gitignore`、`.gitattributes`、`THIRD_PARTY_NOTICES.md`、`README.md`、`scripts/requirements.txt`
@@ -205,7 +205,7 @@ git log --oneline | head -3
 
 ---
 
-### 任务 2:`date` 包(含 `CalendarError`、`internal/jsonx`、Date 期望数据生成器、嵌入脚本)
+### Task 2:`date` 包(含 `CalendarError`、`internal/jsonx`、Date 期望数据生成器、嵌入脚本)
 
 **文件:**
 - 创建:`date/moon.pkg`、`date/error.mbt`、`date/date.mbt`、`date/date_test.mbt`、`date/date_cases_test.mbt`(生成)
@@ -1084,7 +1084,7 @@ git log --oneline | head -3
 
 ---
 
-### 任务 3:农历表与节气表生成器、农历/节气期望数据生成器
+### Task 3:农历表与节气表生成器、农历/节气期望数据生成器
 
 **文件:**
 - 创建:`scripts/gen_tables.py`、`lunar/moon.pkg`、`lunar/tables_gen.mbt`(生成)
@@ -1541,7 +1541,7 @@ git log --oneline | head -3
 
 ---
 
-### 任务 4:`lunar` 包:公历 ↔ 农历
+### Task 4:`lunar` 包:公历 ↔ 农历
 
 **文件:**
 - 创建:`lunar/lunar.mbt`、`lunar/lunar_test.mbt`、`lunar/lunar_wbtest.mbt`
@@ -2022,7 +2022,7 @@ git log --oneline | head -3
 
 ---
 
-### 任务 5:`lunar` 包:二十四节气
+### Task 5:`lunar` 包:二十四节气
 
 **文件:**
 - 创建:`lunar/solar_term.mbt`、`lunar/solar_term_test.mbt`
@@ -2266,7 +2266,7 @@ git log --oneline | head -3
 
 ---
 
-### 任务 6:节假日数据导入,并对照国务院通知原文核对
+### Task 6:节假日数据导入,并对照国务院通知原文核对
 
 **文件:**
 - 创建:`scripts/import_holidays.py`、`data/holidays.json`(生成)、`docs/data-verification.md`
@@ -2576,7 +2576,7 @@ git log --oneline | head -3
 
 ---
 
-### 任务 7:`holiday` 包:加载、校验与查询
+### Task 7:`holiday` 包:加载、校验与查询
 
 **文件:**
 - 创建:`holiday/moon.pkg`、`holiday/holiday.mbt`、`holiday/loader.mbt`、`holiday/holiday_test.mbt`、`holiday/loader_wbtest.mbt`
@@ -3226,7 +3226,7 @@ git log --oneline | head -3
 
 ---
 
-### 任务 8:`workday` 包:工作日计算
+### Task 8:`workday` 包:工作日计算
 
 **文件:**
 - 创建:`workday/moon.pkg`、`workday/workday.mbt`、`workday/workday_test.mbt`
@@ -3788,7 +3788,7 @@ git log --oneline | head -3
 
 ---
 
-### 任务 9:根包、三后端脚本、README 与最终验证
+### Task 9:根包、三后端脚本、README 与最终验证
 
 **文件:**
 - 创建:`cncal.mbt`、`cncal_test.mbt`、`scripts/run_all_backends.py`
