@@ -1,6 +1,9 @@
 """生成脚本共用的小工具。"""
 import json
 import os
+import shutil
+import subprocess
+import tarfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -60,3 +63,28 @@ def require_lunar_python():
     if version != LUNAR_PYTHON_VERSION:
         raise SystemExit("需要 lunar_python==%s,当前是 %s" % (LUNAR_PYTHON_VERSION, version))
     return version
+
+
+CHINESE_DAYS_VERSION = "1.5.9"
+CACHE = os.path.join(ROOT, "scripts", ".cache")
+
+
+def chinese_days_dir():
+    """返回已解压的 chinese-days 包目录;首次使用时用 npm 下载到 scripts/.cache(需要 Python 3.12+)。"""
+    base = os.path.join(CACHE, "chinese-days-" + CHINESE_DAYS_VERSION)
+    pkg = os.path.join(base, "package")
+    if os.path.isfile(os.path.join(pkg, "package.json")):
+        return pkg
+    npm = shutil.which("npm")
+    if not npm:
+        raise SystemExit("需要 Node.js 与 npm(用于下载 chinese-days 包)")
+    os.makedirs(base, exist_ok=True)
+    subprocess.run(
+        [npm, "pack", "chinese-days@" + CHINESE_DAYS_VERSION, "--silent"],
+        cwd=base,
+        check=True,
+    )
+    tgz = os.path.join(base, "chinese-days-%s.tgz" % CHINESE_DAYS_VERSION)
+    with tarfile.open(tgz) as tf:
+        tf.extractall(base, filter="data")
+    return pkg
