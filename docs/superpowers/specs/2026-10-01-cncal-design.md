@@ -55,7 +55,7 @@
 | D4 | 5 个包:`date`、`lunar`、`holiday`、`workday`、根包 | 依赖单向,每个包可单独测试、单独讲清楚。 |
 | D5 | 工作日语义见 §5.4 | 与 Excel `WORKDAY`、numpy `busday_count` 一致,互为逆运算(有条件,见 §5.4.2)。 |
 | D6 | 模块名 `sayoi7799/cncal`,许可证 MIT | 与两个对照项目的 MIT 授权一致。 |
-| D7 | 错误模型:`suberror CalendarError` + `raise` | MoonBit 的惯用写法;调用方需要 `Result` 时用 `try?`。错误的类别是接口契约,错误文字不是。 |
+| D7 | 错误模型:`pub(all) suberror CalendarError` + `raise` | MoonBit 的惯用写法;调用方用 `try … catch …` 处理(`try?` 在当前工具链中已弃用)。错误的类别是接口契约,错误文字不是。 |
 | D8 | 所有日期是**北京时间(UTC+8)的日历日** | lunar-python 的朔望与节气按北京时间计算;chinese-days 的放假安排是中国日历日。 |
 
 ## 4. 架构
@@ -70,10 +70,11 @@ date ──┬──► lunar ───────────────┐
 
 - `date` 不依赖任何包,同时定义全局错误类型 `CalendarError`。
 - `lunar` 依赖 `date`。
-- `holiday` 依赖 `date` 与 `moonbitlang/core/json`。
+- `holiday` 依赖 `date`、`internal/jsonx` 与 `moonbitlang/core/lazy`。
 - `workday` 依赖 `date` 与 `holiday`。
 - 根包依赖以上四个包,自己不含逻辑。
 - `lunar` 与 `holiday` 互不依赖。
+- `internal/jsonx` 是模块内部的 JSON 读取小工具(`as_int`、`field` 等,出错时抛 `DataCorrupt`),只供 `holiday` 的加载器和各包的测试使用,外部无法导入。它依赖 `date` 与 `moonbitlang/core/json`。已验证:`date` 的黑盒测试可以导入 `jsonx`,不会形成依赖环。
 
 ### 4.2 目录结构
 
@@ -81,6 +82,7 @@ date ──┬──► lunar ───────────────┐
 cncal/
 ├─ moon.mod  LICENSE  README.md  THIRD_PARTY_NOTICES.md  .gitignore  .gitattributes
 ├─ docs/superpowers/specs/2026-10-01-cncal-design.md        本文档
+├─ internal/jsonx/  jsonx.mbt  jsonx_test.mbt             模块内部的 JSON 读取工具
 ├─ date/       date.mbt  error.mbt  *_test.mbt  date_cases_test.mbt(生成)
 ├─ lunar/      tables_gen.mbt(生成)  lunar.mbt  solar_term.mbt  *_test.mbt  *_expected_test.mbt(生成)
 ├─ holiday/    data_gen.mbt(生成)  loader.mbt  holiday.mbt  *_test.mbt  *_expected_test.mbt(生成)
@@ -103,7 +105,7 @@ cncal/
 
 ```moonbit
 pub struct Date { year : Int; month : Int; day : Int }   // 外部只能经下列函数构造,所以任何 Date 值都合法
-pub enum Weekday { Monday; Tuesday; Wednesday; Thursday; Friday; Saturday; Sunday }
+pub(all) enum Weekday { Monday; Tuesday; Wednesday; Thursday; Friday; Saturday; Sunday }
 
 pub fn Date::new(year : Int, month : Int, day : Int) -> Date raise CalendarError
 pub fn Date::from_iso(s : String) -> Date raise CalendarError       // "YYYY-MM-DD"
@@ -123,7 +125,7 @@ pub fn days_in_month(year : Int, month : Int) -> Int raise CalendarError
   2. 日期 → 天数用 Howard Hinnant 的 `days_from_civil` 算法,以 400 年为一个纪元(146097 天),把闰年规则折算成纯整数运算;天数 → 日期是它的逆运算。
   3. 星期由天数直接得出(1970-01-01 是星期四),用向下取整的取模,所以负的天数也正确。
   4. 整个包只用 `Int`,没有浮点,所以三个后端的结果一致。
-  5. 构造函数是唯一入口,所以持有 `Date` 值就等于合法性已经被检查过。
+  5. 构造函数是唯一入口,所以持有 `Date` 值就等于合法性已经被检查过。已验证:在包外直接写 `{ year: 2023, month: 2, day: 31 }` 会得到编译错误(4036,只读类型,不可构造)。
 - **测试预期值来源:** Python 标准库 `datetime`(它的范围恰好也是 1–9999 年),见 §7.1。
 
 ### 5.2 `lunar`:农历与二十四节气
@@ -136,7 +138,7 @@ pub fn lunar_to_solar(l : LunarDate) -> Date raise CalendarError
 pub fn leap_month(year : Int) -> Int raise CalendarError                   // 0 表示该年无闰月
 pub fn month_days(year : Int, month : Int, is_leap : Bool) -> Int raise CalendarError
 
-pub enum SolarTerm { XiaoHan; DaHan; LiChun; YuShui; JingZhe; ChunFen; QingMing; GuYu; LiXia; XiaoMan; MangZhong; XiaZhi
+pub(all) enum SolarTerm { XiaoHan; DaHan; LiChun; YuShui; JingZhe; ChunFen; QingMing; GuYu; LiXia; XiaoMan; MangZhong; XiaZhi
                      XiaoShu; DaShu; LiQiu; ChuShu; BaiLu; QiuFen; HanLu; ShuangJiang; LiDong; XiaoXue; DaXue; DongZhi }
 pub struct SolarTermDate { term : SolarTerm; date : Date }
 pub fn solar_terms(year : Int) -> Array[SolarTermDate] raise CalendarError  // 24 个,按日期升序,从小寒到冬至
@@ -229,7 +231,7 @@ pub fn SolarTerm::name(self : SolarTerm) -> String                          // "
 #### 5.3.3 接口
 
 ```moonbit
-pub enum DayKind {
+pub(all) enum DayKind {
   Workday                  // 普通工作日:周一至周五,且不在放假区间内
   Weekend                  // 普通周末:周六日,不在放假区间内,也不是补班日
   Holiday(String)          // 放假日,附节日名
@@ -337,14 +339,17 @@ re-export 常用类型与函数,使最小示例只需要导入一个包。如果
 ## 6. 错误模型
 
 ```moonbit
-pub suberror CalendarError {
+pub(all) suberror CalendarError {
   InvalidDate(String)                 // 不存在的日期,如 2023-02-29、13 月;农历的闰月标记与该年不符
   OutOfRange(String)                  // 超出支持范围:Date 的 1–9999 年、农历域、节气年份
   DataNotCovered(Date, Date, Date)    // 请求的日期、已覆盖的起、已覆盖的止
   DataCorrupt(String)                 // 嵌入的节假日数据未通过校验
-}
+} derive(Eq, Debug)
+// 另有手写的 Show,输出简体中文消息
 ```
 
+- **必须是 `pub(all)`:** 普通的 `pub suberror` 在包外是只读类型(编译错误 4036),`lunar`、`holiday` 等兄弟包就无法 `raise @date.OutOfRange(...)`。`pub(all)` 也让测试可以直接构造并比较错误值。
+- **调用方处理错误用 `try … catch { … } noraise { … }`。** `try?` 在当前工具链中已弃用,库不提供 `Result` 版本的接口。
 - **接口契约是错误的类别**,测试只匹配类别(`InvalidDate` 等),不匹配消息文字;消息使用简体中文。
 - 超出农历域、节气年份、节假日覆盖范围的行为是**本设计规定**的(例如 `1900-01-30` 转农历必须是错误),而 lunar-python 在这些点上会给出别的结果(它把 `1900-01-30` 转成农历 1899 年十二月三十)。所以这类用例由设计文档规定,不用 lunar-python 生成。
 
@@ -365,8 +370,9 @@ pub suberror CalendarError {
 
 - 每个 JSON 的 `meta` 记录:生成器名称、lunar-python 与 chinese-days 的版本、随机种子、数据范围。**不写时间戳**,保证重复运行结果逐字节相同。
 - **版本固定**:`lunar_python==1.4.8`,`chinese-days@1.5.9`。
-- **两条独立路径互相校验**:表生成器 `gen_tables.py` 使用 lunar-python 的 `LunarYear` 接口,期望值生成器使用逐日接口。两者走的是 lunar-python 里不同的代码,所以表和预期值若同时出错,几乎只可能是 lunar-python 自己有问题。
+- **两个入口互相校验,但不构成独立验证。** 表生成器 `gen_tables.py` 使用 lunar-python 的 `LunarYear` 接口,期望值生成器使用逐日接口(`Solar.getLunar()`、`Lunar.getJieQi()` 等)。实测二者在 201 年 × 24 个节气上完全一致(0 处差异),这能发现生成器误用接口的错误。但读 `LunarYear.compute` 的源码可知,两个入口共用同一套天文计算,所以它**不能**证明 lunar-python 自身正确。我们的验收基准本来就是 lunar-python,这一点在此如实记录。
 - 嵌入方式:用 `moon tool embed` 把 JSON 转成测试专用的 `*_test.mbt` 字符串常量(`scripts/embed_data.py` 统一执行,并提供 `--check` 检查生成物是否过期)。
+- **嵌入文件的行数限制:** `moon tool embed` 把 JSON 的每一行变成一行 `#|`,编译器在单个字符串常量达到约 16384 行时给出警告 0033。所以生成器输出的 JSON 都是「一条记录一行」(或「一年一行」),每个文件远少于 16000 行。(实测 24000 行、约 1MB 的嵌入文件三个后端都能编译和运行,只是有警告。)
 
 ### 7.2 验收项与测试的对应
 
@@ -417,17 +423,21 @@ pub suberror CalendarError {
 4. **部分年份的出处不是一手来源。** chinese-days 源码中 2005 年的出处是百度知道、2004 年是维基文库,其余 21 年均为 gov.cn。实现阶段会尝试补充 gov.cn 的一手链接,补不到就在 README 中注明。
 5. **与 chinese-days 的命名与语义差异**(已在 §5.3.3 与 §5.4.4 说明):`is_holiday` 不含普通周末;`n = 0` 且非工作日时不顺延。
 6. **环境注意事项(已实测):** pip 默认的清华镜像下载 `lunar_python` 会返回 403,需要 `-i https://pypi.org/simple`;运行 Python 脚本需设置 `PYTHONUTF8=1` 避免中文乱码;脚手架会尝试创建 `README.md → README.mbt.md` 的符号链接,Windows 需要管理员权限,所以本项目使用普通的 `README.md`。
-7. **实现期需要用 `moon ide doc` 或小测试确认的语言细节**(不凭记忆猜):
-   - `suberror` 的声明语法,以及测试里 `raise` 函数的写法(`try?` 或 `catch`)。
-   - `pub struct` 的字段是否对外只读、外部是否无法构造。
-   - 根包 `pub using` 式 re-export 的语法与行为。
-   - 含 4824 个元素的顶层常量数组在三个后端的编译与体积;若有问题,改用字符串编码,接口不变。
-   - 惰性解析并缓存的写法(避免在模块初始化时解析 JSON)。
-   - `String` 的索引与 `Char` API(解析日期字符串用)。
-   - `moon test --target all` 包含哪些后端。
-   - 本地路径依赖的声明写法(README 的「从源码使用」)。
-   - `moon tool embed` 在 Windows 下是否生成 CRLF。
-   - 已验证:`moon tool embed` 生成的 `#|` 字符串常量可被 `@json.parse` 解析,中文无损;测试里使用包需写成 `import {…} for "wbtest"`(或 `"test"`);`Json` 是枚举,用模式匹配访问。
+7. **MoonBit 语言细节(均已在临时探针里用 js、wasm-gc、native 三个后端验证,不凭记忆):**
+   - `pub(all) suberror CalendarError { … } derive(Eq, Debug)`。普通 `pub suberror` 的构造器在包外只读(4036),兄弟包无法 `raise`。
+   - 测试里断言错误用 `try f() catch { @date.InvalidDate(_) => () … } noraise { _ => fail("…") }`;`try?` 已弃用。
+   - `pub struct` 的字段对外可读,但包外无法构造(4036),所以「持有 Date 即合法」成立。没有不变量的枚举(`Weekday`、`DayKind`、`SolarTerm`)用 `pub(all)`。
+   - `Eq`、`Compare`、`Debug` 用 `derive`;`derive(Show)` 已弃用,所以 `Show` 手写:`pub impl Show for T with fn output(self, logger) { … }`。`assert_eq` 要求 `Eq + Debug`,`inspect` 要求 `Show`。
+   - 每个 `derive` 与自定义 `Show` 会触发弃用警告 `implicit_impl_as_method`,在各包的 `moon.pkg` 里用 `warnings = "-implicit_impl_as_method"` 关闭。
+   - re-export 的写法是 `.mbt` 源文件里的 `pub using @date {type Date, type CalendarError}`,不是 `moon.pkg` 里的配置。
+   - 惰性缓存用 core 自带的 `@lazy.Lazy`:`Lazy(() => …)` 与 `.force()`。`force` 不会抛错,所以缓存的是 `Result[T, CalendarError]`,在调用处再 `raise`。
+   - 4824 个元素的 `FixedArray[Int]` 字面量,以及约 1MB、24000 行的嵌入 JSON,三个后端都能编译运行,耗时 0–2 秒。
+   - `s[i]` 取到的是 `Char`;空 Map 写 `Map([])`(`{}` 有歧义警告,`Map::new` 已弃用)。
+   - `moon test --target all` 实际运行 wasm、wasm-gc、js、native 四个后端(不含 llvm)。`moon test` 有失败时退出码为 2,全部通过为 0。
+   - `moon tool embed` 在 Windows 上输出 LF;只有 `moon.mod` 与空 `moon.pkg` 的空根包可以通过 `moon check` 与 `moon test`。
+   - `moon fmt` 会重排 `moon.mod`,不会改动格式已经规范的生成文件。
+   - **唯一仍待实现期验证的:** 本地路径依赖的声明写法(S9,README 的「从源码使用」)。
+8. **节气的独立对照:chinese-days 的公式法不可作为参考。** chinese-days 用「寿星通用公式」计算节气,是和 lunar-python 完全不同的算法。逐一比对 1900–2100 年的 24 个节气,共 124 处 (年, 节气) 不一致:其中 100 处是「立秋」在 1900–1999 年**每一年都晚了整整 20 天**(它的常数表里 `the_beginning_of_autumn` 的 20 世纪常数是 28.35,而 21 世纪是 7.5),其余 24 处是公式近似造成的相差 1 天(冬至 7 次,大寒、立春、雨水各 3 次等)。所以节气仍以 lunar-python 为准(这也是验收标准),chinese-days 的公式法不用于测试。这是 chinese-days 的上游缺陷,与本项目无关,在此记录。
 
 ## 10. 实施步骤与提交粒度
 
@@ -459,6 +469,7 @@ pub suberror CalendarError {
 - 1900–2100 每年恰好 24 个节气;每个节气总落在固定的公历月份;「几号」的范围是 3–24。
 - 节气恰好落在农历月初一或月末日的次数:326(1900-01-31 ~ 2100-12-31)。
 - 提取全部 201 个农历年的闰月、各月天数、正月初一约 0.5 秒;逐日扫描节气约 42 秒。
+- `LunarYear.getJieQiJulianDays()`(取下标 2 到 25,即小寒到冬至)与逐日接口 `Lunar.getJieQi()` 在 201 年 × 24 个节气上完全一致,0 处差异;二者共用天文计算核心。
 
 **chinese-days 1.5.9**
 
@@ -467,6 +478,7 @@ pub suberror CalendarError {
 - `isHoliday` 的实现是「不是工作日」,所以普通周末也返回真。
 - `findWorkday(0, d)`:`d` 是工作日则返回 `d`;否则当作 `n = 1`。
 - 它自带的农历表(`LUNAR_INFO`)与 lunar-python 在 1933、1996、2060 三年的月大小不同。
+- 它的节气公式法与 lunar-python 在 124 个 (年, 节气) 上不同:100 处是「立秋」在 1900–1999 年全部晚 20 天,24 处是相差 1 天(见 §9 风险 8)。
 
 **官方通知核对**
 
