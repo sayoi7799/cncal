@@ -15,6 +15,9 @@ from gencommon import ROOT
 # (输入 JSON, 输出 .mbt, 常量名)。新增数据集时在这里追加。
 EMBEDS = [
     ("testdata/date_cases.json", "date/date_cases_test.mbt", "date_cases_json"),
+    ("testdata/lunar_samples.json", "lunar/lunar_samples_test.mbt", "lunar_samples_json"),
+    ("testdata/lunar_month_starts.json", "lunar/lunar_month_starts_test.mbt", "lunar_month_starts_json"),
+    ("testdata/solar_terms.json", "lunar/solar_terms_test.mbt", "solar_terms_json"),
 ]
 
 

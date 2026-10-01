@@ -40,3 +40,23 @@ def write_sectioned_json(rel_path, sections):
         else:
             parts.append('"%s":%s' % (key, compact(value)))
     write_text(rel_path, "{\n" + ",\n".join(parts) + "\n}\n")
+
+
+LUNAR_PYTHON_VERSION = "1.4.8"
+
+
+def require_lunar_python():
+    """确认安装的 lunar_python 与固定版本一致,返回版本号。"""
+    import importlib.metadata as metadata
+
+    try:
+        version = metadata.version("lunar_python")
+    except metadata.PackageNotFoundError:
+        raise SystemExit(
+            "未安装 lunar_python。请运行:\n"
+            "  python -m venv .venv\n"
+            "  .venv/Scripts/python -m pip install -r scripts/requirements.txt -i https://pypi.org/simple"
+        )
+    if version != LUNAR_PYTHON_VERSION:
+        raise SystemExit("需要 lunar_python==%s,当前是 %s" % (LUNAR_PYTHON_VERSION, version))
+    return version
