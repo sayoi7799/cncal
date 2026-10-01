@@ -1,5 +1,5 @@
 ///|
-fn[T : Show] expect_invalid(
+fn[T] expect_invalid(
   f : () -> T raise @date.CalendarError,
   what : String,
 ) -> Unit raise {
@@ -7,12 +7,12 @@ fn[T : Show] expect_invalid(
     @date.InvalidDate(_) => ()
     e => fail("\{what}: 期望 InvalidDate,实际 \{e}")
   } noraise {
-    v => fail("\{what}: 期望 InvalidDate,实际得到 \{v}")
+    _ => fail("\{what}: 期望 InvalidDate,但没有出错")
   }
 }
 
 ///|
-fn[T : Show] expect_out_of_range(
+fn[T] expect_out_of_range(
   f : () -> T raise @date.CalendarError,
   what : String,
 ) -> Unit raise {
@@ -20,7 +20,7 @@ fn[T : Show] expect_out_of_range(
     @date.OutOfRange(_) => ()
     e => fail("\{what}: 期望 OutOfRange,实际 \{e}")
   } noraise {
-    v => fail("\{what}: 期望 OutOfRange,实际得到 \{v}")
+    _ => fail("\{what}: 期望 OutOfRange,但没有出错")
   }
 }
 

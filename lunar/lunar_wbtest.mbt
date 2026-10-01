@@ -38,3 +38,12 @@ test "农历表自洽:闰月在 0–12 之间,表的长度正确" {
     assert_true(leap_of(info) >= 0 && leap_of(info) <= 12)
   }
 }
+
+///|
+test "节气表自洽:长度正确,日期落在 3–24 号" {
+  assert_eq(solar_term_days.length(), 201 * 24)
+  assert_eq(term_names.length(), 24)
+  for v in solar_term_days {
+    assert_true(v >= 3 && v <= 24, msg="节气日期 \{v}")
+  }
+}

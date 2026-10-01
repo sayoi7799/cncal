@@ -13,6 +13,8 @@ pub fn lunar_to_solar(LunarDate) -> @date.Date raise @date.CalendarError
 
 pub fn month_days(Int, Int, Bool) -> Int raise @date.CalendarError
 
+pub fn solar_terms(Int) -> Array[SolarTermDate] raise @date.CalendarError
+
 pub fn solar_to_lunar(@date.Date) -> LunarDate raise @date.CalendarError
 
 // Errors
@@ -26,6 +28,41 @@ pub struct LunarDate {
 } derive(Compare, Eq, @debug.Debug)
 pub fn LunarDate::new(Int, Int, Bool, Int) -> Self raise @date.CalendarError
 pub impl Show for LunarDate
+
+pub(all) enum SolarTerm {
+  XiaoHan
+  DaHan
+  LiChun
+  YuShui
+  JingZhe
+  ChunFen
+  QingMing
+  GuYu
+  LiXia
+  XiaoMan
+  MangZhong
+  XiaZhi
+  XiaoShu
+  DaShu
+  LiQiu
+  ChuShu
+  BaiLu
+  QiuFen
+  HanLu
+  ShuangJiang
+  LiDong
+  XiaoXue
+  DaXue
+  DongZhi
+} derive(Compare, Eq, @debug.Debug)
+pub fn SolarTerm::index(Self) -> Int
+pub fn SolarTerm::name(Self) -> String
+
+pub struct SolarTermDate {
+  term : SolarTerm
+  date : @date.Date
+} derive(Eq, @debug.Debug)
+pub impl Show for SolarTermDate
 
 // Type aliases
 
