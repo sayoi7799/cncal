@@ -90,7 +90,7 @@ fn month_of_slot(leap : Int, slot : Int) -> (Int, Bool) {
 ///|
 /// (月份, 是否闰月) → 月槽位。
 fn slot_of_month(leap : Int, month : Int, is_leap : Bool) -> Int {
-  if leap == 0 || month < leap || (month == leap && not(is_leap)) {
+  if leap == 0 || month < leap || (month == leap && !is_leap) {
     month - 1
   } else {
     month

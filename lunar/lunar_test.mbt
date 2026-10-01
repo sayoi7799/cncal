@@ -202,7 +202,7 @@ test "审查重点:闰月标记、月份、日期、年份的误用一律报错"
     }
     // 没有闰月的月份,加上闰标记必须报错,不能换算成别的合法日期
     for m in 1..<=12 {
-      if not(leap_months.contains(m)) {
+      if !leap_months.contains(m) {
         expect_invalid(
           () => @lunar.LunarDate::new(y, m, true, 1),
           "\{y} 年没有闰 \{m} 月",

@@ -1735,7 +1735,7 @@ test "审查重点:闰月标记、月份、日期、年份的误用一律报错"
     }
     // 没有闰月的月份,加上闰标记必须报错,不能换算成别的合法日期
     for m in 1..=12 {
-      if not(leap_months.contains(m)) {
+      if !leap_months.contains(m) {
         expect_invalid(() => @lunar.LunarDate::new(y, m, true, 1), "\{y} 年没有闰 \{m} 月")
       }
     }
@@ -1889,7 +1889,7 @@ fn month_of_slot(leap : Int, slot : Int) -> (Int, Bool) {
 ///|
 /// (月份, 是否闰月) → 月槽位。
 fn slot_of_month(leap : Int, month : Int, is_leap : Bool) -> Int {
-  if leap == 0 || month < leap || (month == leap && not(is_leap)) {
+  if leap == 0 || month < leap || (month == leap && !is_leap) {
     month - 1
   } else {
     month
@@ -3167,7 +3167,7 @@ fn parse_table(raw : String) -> Table raise @date.CalendarError {
     if n < from_days || n > through_days {
       raise @date.DataCorrupt("补班日超出 coverage: \{date}")
     }
-    if not(date.weekday().is_weekend()) {
+    if !date.weekday().is_weekend() {
       raise @date.DataCorrupt("补班日必须是周六或周日: \{date}")
     }
     if days.contains(n) {
