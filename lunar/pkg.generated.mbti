@@ -1,11 +1,31 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "sayoi7799/cncal/lunar"
 
+import {
+  "moonbitlang/core/debug",
+  "sayoi7799/cncal/date",
+}
+
 // Values
+pub fn leap_month(Int) -> Int raise @date.CalendarError
+
+pub fn lunar_to_solar(LunarDate) -> @date.Date raise @date.CalendarError
+
+pub fn month_days(Int, Int, Bool) -> Int raise @date.CalendarError
+
+pub fn solar_to_lunar(@date.Date) -> LunarDate raise @date.CalendarError
 
 // Errors
 
 // Types and methods
+pub struct LunarDate {
+  year : Int
+  month : Int
+  is_leap : Bool
+  day : Int
+} derive(Compare, Eq, @debug.Debug)
+pub fn LunarDate::new(Int, Int, Bool, Int) -> Self raise @date.CalendarError
+pub impl Show for LunarDate
 
 // Type aliases
 

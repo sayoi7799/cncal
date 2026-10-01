@@ -1,3 +1,11 @@
 warnings = "-implicit_impl_as_method"
 
 formatter(ignore: [ "tables_gen.mbt" ])
+
+import {
+  "sayoi7799/cncal/date",
+}
+
+import {
+  "sayoi7799/cncal/internal/jsonx",
+} for "test"
