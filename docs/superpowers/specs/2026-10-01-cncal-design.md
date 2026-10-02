@@ -2,7 +2,7 @@
 
 | 项 | 内容 |
 |---|---|
-| 状态 | 设计已由用户确认(2026-10-01);本文档待用户审阅 |
+| 状态 | 设计已由用户确认并已实现(2026-10-01 ~ 10-02)。实现与本文档的差异见 §11 |
 | 模块名 | `sayoi7799/cncal`(`sayoi7799` 是 mooncakes.io 上的用户名) |
 | 许可证 | MIT |
 | 工具链 | moon 0.1.20260920,moonc v0.10.14。实测 js、wasm-gc、native 三个后端均可编译并运行测试(native 使用本机 MSVC) |
@@ -82,6 +82,8 @@ date ──┬──► lunar ───────────────┐
 cncal/
 ├─ moon.mod  LICENSE  README.md  THIRD_PARTY_NOTICES.md  .gitignore  .gitattributes
 ├─ docs/superpowers/specs/2026-10-01-cncal-design.md        本文档
+├─ docs/superpowers/plans/2026-10-01-cncal-implementation.md 实现计划
+├─ docs/data-verification.md                              节假日数据对照国务院通知原文的核对记录
 ├─ internal/jsonx/  jsonx.mbt  jsonx_test.mbt             模块内部的 JSON 读取工具
 ├─ date/       date.mbt  error.mbt  *_test.mbt  date_cases_test.mbt(生成)
 ├─ lunar/      tables_gen.mbt(生成)  lunar.mbt  solar_term.mbt  *_test.mbt  *_expected_test.mbt(生成)
@@ -436,7 +438,7 @@ pub(all) suberror CalendarError {
    - `moon test --target all` 实际运行 wasm、wasm-gc、js、native 四个后端(不含 llvm)。`moon test` 有失败时退出码为 2,全部通过为 0。
    - `moon tool embed` 在 Windows 上输出 LF;只有 `moon.mod` 与空 `moon.pkg` 的空根包可以通过 `moon check` 与 `moon test`。
    - `moon fmt` 会重排 `moon.mod`,不会改动格式已经规范的生成文件。
-   - **唯一仍待实现期验证的:** 本地路径依赖的声明写法(S9,README 的「从源码使用」)。
+   - 本地路径依赖(已验证):新版 `moon.mod` 不再支持在 `import` 里写本地路径;改用工作区文件 `moon.work`(`members = ["app", "cncal"]`),使用者模块的 `moon.mod` 里写 `"sayoi7799/cncal@0.1.0"`(版本号被忽略,从本地解析)。用并排克隆的两个模块实测,js、wasm-gc、native 都通过。
 8. **节气的独立对照:chinese-days 的公式法不可作为参考。** chinese-days 用「寿星通用公式」计算节气,是和 lunar-python 完全不同的算法。逐一比对 1900–2100 年的 24 个节气,共 124 处 (年, 节气) 不一致:其中 100 处是「立秋」在 1900–1999 年**每一年都晚了整整 20 天**(它的常数表里 `the_beginning_of_autumn` 的 20 世纪常数是 28.35,而 21 世纪是 7.5),其余 24 处是公式近似造成的相差 1 天(冬至 7 次,大寒、立春、雨水各 3 次等)。所以节气仍以 lunar-python 为准(这也是验收标准),chinese-days 的公式法不用于测试。这是 chinese-days 的上游缺陷,与本项目无关,在此记录。
 
 ## 10. 实施步骤与提交粒度
@@ -489,3 +491,18 @@ pub(all) suberror CalendarError {
 - moon 0.1.20260920、moonc v0.10.14;新版配置文件是 `moon.mod`、`moon.pkg`(DSL),不再是 JSON。
 - `moon test` 在 js、wasm-gc、native 三个后端上对带真实断言的探针均为 3/3 通过。
 - `moon test --target` 的可选值:`wasm`、`wasm-gc`、`js`、`native`、`llvm`、`all`。
+
+## 11. 实现与设计的差异
+
+实现过程中有以下几处与本文档的原文不同。它们都是工具链或实测带来的调整,没有改变任何已确认的语义。
+
+| 项 | 设计文档里的写法 | 实际做法 | 原因 |
+|---|---|---|---|
+| 生成的农历表是否被 `moon fmt` 重排 | 未提及 | `lunar/moon.pkg` 里写 `formatter(ignore: [ "tables_gen.mbt" ])` | `moon fmt` 会把整型数组按列宽重新折行,破坏「一年一行」的可读布局;让它跳过生成物最稳 |
+| 布尔取反 | `not(x)` | `!x` | `not()` 在当前工具链中已弃用(警告 0020) |
+| 区间的写法 | `a..=b` | `a..<=b` | `moon fmt` 自动迁移,`..=` 是旧写法 |
+| 测试辅助函数 | 带 `T : Show` 约束并打印意外得到的值 | 去掉约束,只报告「没有出错」 | 对 `Array` 使用 `Show` 已弃用;打印值的价值不大 |
+| 根包重导出的枚举 | 只写 `pub using @date {type Weekday}` | 同上,但使用时变体要用类型名限定,如 `@cncal.Weekday::Wednesday`、`@cncal.CalendarError::DataNotCovered(_, _, _)` | 重导出的是类型别名,变体不会作为独立的名字被导出 |
+| 2004、2005 年的出处 | 沿用 chinese-days 的链接 | 2004 年换成陕西省人民政府网站转发的全文;2005 年换成法律数据库的转载(没有找到政府网站上的版本) | 原链接是维基文库和百度知道,不是一手来源 |
+| 节假日数据核对 | 只核对 2024–2026 | 另外核对了 2004、2005 | 这两年的出处最弱,顺带核对;结果见 `docs/data-verification.md` |
+| 边界用例数量 | 「约千条」 | 1079 条(闰月首尾各 74 个、除夕与正月初一各 201 个、元旦 201 个、节气落在农历月初月末 326 次、域首尾各 1 个) | 实测值 |
