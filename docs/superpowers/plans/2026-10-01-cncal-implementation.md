@@ -25,7 +25,7 @@
 - 测试预期值不手写。唯一例外:设计文档明确规定的「错误行为」用例(如 `1900-01-30` 转农历必须报 `OutOfRange`)。
 - 生成的文件(`*_gen.mbt`、`*_test.mbt` 嵌入文件、`testdata/*.json`)头部有 `DO NOT EDIT`;仓库统一 LF 换行。嵌入的 JSON 必须「一条记录一行」,每个文件远少于 16000 行(设计文档 §7.1)。
 - 版本固定:`lunar_python==1.4.8`,`chinese-days@1.5.9`。运行 Python 脚本时设置 `PYTHONUTF8=1`;pip 安装使用 `-i https://pypi.org/simple`(默认清华镜像对该包返回 403)。
-- 提交信息末尾加一行 `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`。不做空提交,不为凑数拆分提交。
+- 不做空提交,不为凑数拆分提交。
 
 ## 审查重点
 
@@ -198,7 +198,6 @@ chore: 建立项目骨架(moon.mod、MIT 许可证、第三方授权声明、LF 
 - .gitattributes 统一 LF 换行,避免嵌入的文本在不同系统上字节不同
 - scripts/requirements.txt 固定 lunar_python==1.4.8
 
-Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
 EOF
 git log --oneline | head -3
 ```
@@ -1069,7 +1068,6 @@ feat(date): 添加 Date 类型、CalendarError 与测试数据生成/嵌入脚�
 - scripts/embed_data.py:用 moon tool embed 把 JSON 嵌入测试,支持 --check
 - 审查重点:畸形日期字符串、Int 极端值的加减天数均有测试
 
-Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
 EOF
 git log --oneline | head -3
 ```
@@ -1534,7 +1532,6 @@ feat(scripts): 添加农历表/节气表生成器与农历、节气期望数据�
 - 生成时对每条记录反向查询一次(农历→公历)自检;输出不含时间戳,可逐字节重现
 - 已用 Python 独立解码生成的表,与预期数据在 201 年内逐年核对一致
 
-Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
 EOF
 git log --oneline | head -3
 ```
@@ -2007,7 +2004,6 @@ feat(lunar): 添加公历与农历互转(含闰月),域外报 OutOfRange
   域内约 73000 天逐日往返恒等且逐日连续;表自洽性白盒测试
 - 审查重点:闰月标记误用、月/日越界、年份越界、Int 极端年份均有测试
 
-Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
 EOF
 git log --oneline | head -3
 ```
@@ -2251,7 +2247,6 @@ feat(lunar): 添加二十四节气查询(1900–2100 年,与 lunar-python 全部
 - 节气按公历年查询,不受农历域边界限制(1900 年小寒在 1900-01-31 之前)
 - 测试:201 年 × 24 个节气的日期与名称逐一比对;严格递增;年份越界(含 Int 极端值)报 OutOfRange
 
-Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
 EOF
 git log --oneline | head -3
 ```
@@ -2568,7 +2563,6 @@ feat(data): 从 chinese-days 导入 2004–2026 年节假日数据并核对国�
 - docs/data-verification.md:2024–2026 三年对照国务院通知原文的核对记录
   (差分测试只能证明代码与数据的读取一致,数据真伪靠这份核对)
 
-Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
 EOF
 git log --oneline | head -3
 ```
@@ -3211,7 +3205,6 @@ feat(holiday): 添加节假日数据加载、校验与查询,覆盖范围外报 
   (类型字符 + 节日名),并与包内数据交叉核对
 - 测试:2004-01-01 ~ 2026-12-31 逐日比对;覆盖范围边界日;18 种损坏数据均返回 DataCorrupt
 
-Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
 EOF
 git log --oneline | head -3
 ```
@@ -3773,7 +3766,6 @@ feat(workday): 添加 is_workday / add_workdays / workdays_between
 - 属性测试:n=0 返回自身、结果是工作日、随 n 严格递增、反对称、可加、与 add_workdays 互为逆运算
 - 审查重点:Int 极端的 n、覆盖范围边界日均有测试
 
-Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
 EOF
 git log --oneline | head -3
 ```
@@ -4027,7 +4019,6 @@ docs: 添加根包重新导出、三后端验证脚本与 README
 - README:安装方式、最小使用示例、工作日语义定义、数据更新流程、
   正确性与已知限制、开发指南、来源与致谢
 
-Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
 EOF
 git log --oneline
 ```
