@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: check / format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Show toolchain versions
+        run: moon version --all
+
+      - name: moon check (deny warnings)
+        run: moon check --deny-warn
+
+      - name: moon fmt diff
+        run: |
+          moon fmt
+          git diff --exit-code
+
+  build-and-test:
+    name: build & test (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [ js, wasm-gc, native ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: moon check (${{ matrix.target }})
+        run: moon check --target ${{ matrix.target }} --deny-warn
+
+      - name: moon build (${{ matrix.target }})
+        run: moon build --target ${{ matrix.target }}
+
+      - name: moon test (${{ matrix.target }})
+        run: moon test --target ${{ matrix.target }}
+
+      - name: moon test --release (${{ matrix.target }})
+        run: moon test --release --target ${{ matrix.target }}
+
+      - name: run example (${{ matrix.target }})
+        run: moon run cmd/demo --target ${{ matrix.target }}
