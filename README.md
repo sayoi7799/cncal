@@ -1,5 +1,7 @@
 # cncal — 中国日历与工作日引擎
 
+[![CI](https://github.com/sayoi7799/cncal/actions/workflows/ci.yml/badge.svg)](https://github.com/sayoi7799/cncal/actions/workflows/ci.yml)
+
 用 [MoonBit](https://www.moonbitlang.com) 编写的中国日历库:公历农历互转、二十四节气、法定节假日与调休、工作日计算。
 
 **同一份代码可以编译到 js、wasm-gc、native,三个后端的结果完全相同。** 库内只用整数运算,没有浮点,所以不会因为各后端数学函数的实现差异而出现不同结果。
