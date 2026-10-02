@@ -21,6 +21,35 @@
 
 所有日期都是**北京时间(UTC+8)的日历日**;不处理时区。
 
+## 快速体验与验证
+
+在项目根目录运行(需要 MoonBit 工具链)。
+
+**一条命令跑完全部测试(三个后端):**
+
+```bash
+python scripts/run_all_backends.py
+```
+
+没有 Python 时,分别运行 `moon test --target js`、`moon test --target wasm-gc`、`moon test --target native` 也一样。全部通过时每个后端都会显示 `failed: 0`。
+
+**看一遍到底验证了什么**(按编号列出每个测试的名称和所在文件):
+
+```bash
+moon test --target wasm-gc --outline
+```
+
+**亲眼看到输出:** 示例程序一次演示日期、农历、节气、节假日、工作日计算和各种报错。
+
+```bash
+moon run cmd/demo --target js
+```
+
+把 `--target` 换成 `wasm-gc` 或 `native`,输出的内容完全相同。在 Windows 上 native 版本会把换行写成 `
+`,所以按字节比较会有差别,比较内容请忽略行尾:PowerShell 里用 `Compare-Object (Get-Content a.txt) (Get-Content b.txt)`,没有输出就表示相同。
+
+native 后端需要本机有 C 编译器(Windows 上是 MSVC);js 后端需要 Node.js。
+
 ## 安装
 
 本库目前**尚未发布到 mooncakes**,请从源码使用。把本仓库克隆到你的模块旁边,用 `moon.work` 把两个模块放进同一个工作区:
@@ -216,6 +245,7 @@ python scripts/embed_data.py                         # 把 JSON 嵌入成 MoonBi
 
 ```
 date/      日期类型与 CalendarError            lunar/     农历与节气(查表)
+cmd/demo/  示例程序(moon run cmd/demo)
 holiday/   节假日数据的加载、校验与查询        workday/   工作日计算
 internal/jsonx/  模块内部的 JSON 读取工具       cncal.mbt  根包:重新导出常用接口
 data/      节假日数据(唯一数据源)             testdata/  测试预期值(脚本生成)

@@ -1,0 +1,5 @@
+import {
+  "sayoi7799/cncal",
+}
+
+pkgtype(kind: "executable")

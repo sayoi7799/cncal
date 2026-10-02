@@ -149,9 +149,7 @@ pub fn solar_to_lunar(d : @date.Date) -> LunarDate raise @date.CalendarError {
   let first = @date.Date::new(1900, 1, 31)
   let last = @date.Date::new(2101, 1, 28)
   if n < first.to_days() || n > last.to_days() {
-    raise @date.OutOfRange(
-      "日期超出农历支持范围 \{first} 至 \{last}: \{d}",
-    )
+    raise @date.OutOfRange("日期必须在 \{first} 至 \{last} 之间: \{d}")
   }
   // 正月初一一定落在 1 月 21 日 ~ 2 月 20 日,所以农历年只可能是公历年本身或前一年。
   // 2101 年没有表,2101-01-01 ~ 2101-01-28 一律归入农历 2100 年。
